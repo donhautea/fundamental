@@ -18,6 +18,7 @@ def load_data(file_path):
             if not df.empty:  # Check if the DataFrame is not empty
                 df['Date'] = pd.to_datetime(df['Date'], errors='coerce')  # Convert Date column to datetime
                 df = df.dropna(subset=['Date'])  # Drop rows where 'Date' is NaT
+                df['Date'] = df['Date'].dt.strftime('%Y/%m/%d')  # Format Date column as yyyy/mm/dd
                 df = df[['Date', 'Stock', 'News', 'Source']]  # Reorder columns
                 data[sheet_name] = df
             else:
