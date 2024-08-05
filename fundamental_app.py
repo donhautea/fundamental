@@ -47,7 +47,7 @@ st.title("Stock News Data Viewer")
 
 # Sidebar for user inputs
 st.sidebar.header("Options")
-action = st.sidebar.selectbox("Choose an action", ("Retrieve Fundamental Data", "Browse / Load xlsx file", "Consolidate Data", "View Fundamental Data"))
+action = st.sidebar.selectbox("Choose an action", ("View Fundamental Data", "Browse / Load xlsx file", "Consolidate Data" ))
 
 if action == "View Fundamental Data":
     if os.path.exists("fundamental.csv"):
