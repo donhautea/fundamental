@@ -18,7 +18,7 @@ def load_data(file_path):
             if not df.empty:  # Check if the DataFrame is not empty
                 df['Date'] = pd.to_datetime(df['Date'], errors='coerce')  # Convert Date column to datetime
                 df = df.dropna(subset=['Date'])  # Drop rows where 'Date' is NaT
-                df['Date'] = df['Date'].dt.strftime('%Y/%m/%d')  # Format Date column as yyyy/mm/dd
+                df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')  # Format Date column as yyyy-mm-dd
                 df = df[['Date', 'Stock', 'News', 'Source']]  # Reorder columns
                 data[sheet_name] = df
             else:
@@ -56,15 +56,15 @@ if action == "View Fundamental Data":
         df = pd.read_csv("fundamental.csv")
         df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dropna()  # Convert Date column to datetime and drop NaT values
         df = df.sort_values(by='Date', ascending=False)
-        df['Date'] = df['Date'].dt.strftime('%Y/%m/%d')  # Format Date column as yyyy/mm/dd
+        df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')  # Format Date column as yyyy-mm-dd
         stocks = sorted(df['Stock'].unique())
         
         selected_stocks = st.sidebar.multiselect("Select Stock(s)", stocks)
         
         if 'start_date' not in st.session_state:
-            st.session_state.start_date = df['Date'].min()
+            st.session_state.start_date = pd.to_datetime(df['Date'].min())
         if 'end_date' not in st.session_state:
-            st.session_state.end_date = df['Date'].max()
+            st.session_state.end_date = pd.to_datetime(df['Date'].max())
         
         start_date = st.sidebar.date_input("Start Date", min_value=pd.to_datetime(df['Date'].min()), max_value=pd.to_datetime(df['Date'].max()), value=st.session_state.start_date)
         end_date = st.sidebar.date_input("End Date", min_value=pd.to_datetime(df['Date'].min()), max_value=pd.to_datetime(df['Date'].max()), value=st.session_state.end_date)
@@ -86,7 +86,7 @@ elif action == "Retrieve Fundamental Data":
             df = pd.read_csv("fundamental.csv")
             df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dropna()  # Convert Date column to datetime and drop NaT values
             df = df.sort_values(by='Date', ascending=False)
-            df['Date'] = df['Date'].dt.strftime('%Y/%m/%d')  # Format Date column as yyyy/mm/dd
+            df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')  # Format Date column as yyyy-mm-dd
             st.session_state['data'] = df
             st.success("Data retrieved from fundamental.csv")
         else:
@@ -105,7 +105,7 @@ elif action == "Consolidate Data":
             existing_df = pd.read_csv("fundamental.csv")
             existing_df['Date'] = pd.to_datetime(existing_df['Date'], errors='coerce').dropna()  # Convert Date column to datetime and drop NaT values
             existing_df = existing_df.sort_values(by='Date', ascending=False)
-            existing_df['Date'] = existing_df['Date'].dt.strftime('%Y/%m/%d')  # Format Date column as yyyy/mm/dd
+            existing_df['Date'] = existing_df['Date'].dt.strftime('%Y-%m-%d')  # Format Date column as yyyy-mm-dd
             consolidated_df = consolidate_data(st.session_state['new_data'], existing_df)
             consolidated_df.to_csv("fundamental.csv", index=False)
             st.success("Data consolidated and saved to fundamental.csv")
