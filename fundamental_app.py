@@ -40,6 +40,7 @@ def filter_data(df, selected_stocks, start_date, end_date):
     if selected_stocks:
         df = df[df['Stock'].isin(selected_stocks)]
     if start_date and end_date:
+        df['Date'] = pd.to_datetime(df['Date'])  # Ensure Date column is in datetime format
         df = df[(df['Date'] >= pd.to_datetime(start_date)) & (df['Date'] <= pd.to_datetime(end_date))]
     return df
 
@@ -52,19 +53,21 @@ action = st.sidebar.selectbox("Choose an action", ("View Fundamental Data", "Bro
 
 if action == "View Fundamental Data":
     if os.path.exists("fundamental.csv"):
-        df = pd.read_csv("fundamental.csv", parse_dates=['Date']).sort_values(by='Date', ascending=False)
+        df = pd.read_csv("fundamental.csv")
+        df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dropna()  # Convert Date column to datetime and drop NaT values
+        df = df.sort_values(by='Date', ascending=False)
         df['Date'] = df['Date'].dt.strftime('%Y/%m/%d')  # Format Date column as yyyy/mm/dd
         stocks = sorted(df['Stock'].unique())
         
         selected_stocks = st.sidebar.multiselect("Select Stock(s)", stocks)
         
         if 'start_date' not in st.session_state:
-            st.session_state.start_date = df['Date'].min().date()
+            st.session_state.start_date = df['Date'].min()
         if 'end_date' not in st.session_state:
-            st.session_state.end_date = df['Date'].max().date()
+            st.session_state.end_date = df['Date'].max()
         
-        start_date = st.sidebar.date_input("Start Date", min_value=df['Date'].min().date(), max_value=df['Date'].max().date(), value=st.session_state.start_date)
-        end_date = st.sidebar.date_input("End Date", min_value=df['Date'].min().date(), max_value=df['Date'].max().date(), value=st.session_state.end_date)
+        start_date = st.sidebar.date_input("Start Date", min_value=pd.to_datetime(df['Date'].min()), max_value=pd.to_datetime(df['Date'].max()), value=st.session_state.start_date)
+        end_date = st.sidebar.date_input("End Date", min_value=pd.to_datetime(df['Date'].min()), max_value=pd.to_datetime(df['Date'].max()), value=st.session_state.end_date)
         
         # Update session state with date input values
         st.session_state.start_date = start_date
@@ -80,7 +83,9 @@ if action == "View Fundamental Data":
 elif action == "Retrieve Fundamental Data":
     if st.sidebar.button("Retrieve Dataset"):
         if os.path.exists("fundamental.csv"):
-            df = pd.read_csv("fundamental.csv", parse_dates=['Date']).sort_values(by='Date', ascending=False)
+            df = pd.read_csv("fundamental.csv")
+            df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dropna()  # Convert Date column to datetime and drop NaT values
+            df = df.sort_values(by='Date', ascending=False)
             df['Date'] = df['Date'].dt.strftime('%Y/%m/%d')  # Format Date column as yyyy/mm/dd
             st.session_state['data'] = df
             st.success("Data retrieved from fundamental.csv")
@@ -97,7 +102,9 @@ elif action == "Browse / Load xlsx file":
 elif action == "Consolidate Data":
     if 'new_data' in st.session_state:
         if os.path.exists("fundamental.csv"):
-            existing_df = pd.read_csv("fundamental.csv", parse_dates=['Date']).sort_values(by='Date', ascending=False)
+            existing_df = pd.read_csv("fundamental.csv")
+            existing_df['Date'] = pd.to_datetime(existing_df['Date'], errors='coerce').dropna()  # Convert Date column to datetime and drop NaT values
+            existing_df = existing_df.sort_values(by='Date', ascending=False)
             existing_df['Date'] = existing_df['Date'].dt.strftime('%Y/%m/%d')  # Format Date column as yyyy/mm/dd
             consolidated_df = consolidate_data(st.session_state['new_data'], existing_df)
             consolidated_df.to_csv("fundamental.csv", index=False)
