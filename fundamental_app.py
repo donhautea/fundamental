@@ -51,7 +51,7 @@ action = st.sidebar.selectbox("Choose an action", ("View Fundamental Data", "Bro
 
 if action == "View Fundamental Data":
     if os.path.exists("fundamental.csv"):
-        df = pd.read_csv("fundamental.csv", parse_dates=['Date'])
+        df = pd.read_csv("fundamental.csv", parse_dates=['Date']).sort_values(by='Date', ascending=False)
         stocks = sorted(df['Stock'].unique())
         
         selected_stocks = st.sidebar.multiselect("Select Stock(s)", stocks)
