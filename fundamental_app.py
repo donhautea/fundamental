@@ -26,13 +26,13 @@ def load_data(file_path):
         else:
             st.error(f"Sheet {sheet_name} does not have the expected format.")
     if data:
-        return pd.concat(data.values(), ignore_index=True)
+        return pd.concat(data.values(), ignore_index=True).sort_values(by='Date', ascending=False)
     else:
         return pd.DataFrame(columns=['Date', 'Stock', 'News', 'Source'])
 
 # Function to consolidate data without duplication
 def consolidate_data(new_data, existing_data):
-    combined_data = pd.concat([existing_data, new_data]).drop_duplicates().reset_index(drop=True)
+    combined_data = pd.concat([existing_data, new_data]).drop_duplicates().reset_index(drop=True).sort_values(by='Date', ascending=False)
     return combined_data
 
 # Function to filter data based on sidebar inputs
@@ -48,11 +48,12 @@ st.title("Stock News Data Viewer")
 
 # Sidebar for user inputs
 st.sidebar.header("Options")
-action = st.sidebar.selectbox("Choose an action", ("View Fundamental Data", "Browse / Load xlsx file", "Consolidate Data" ))
+action = st.sidebar.selectbox("Choose an action", ("View Fundamental Data", "Browse / Load xlsx file", "Consolidate Data"))
 
 if action == "View Fundamental Data":
     if os.path.exists("fundamental.csv"):
         df = pd.read_csv("fundamental.csv", parse_dates=['Date']).sort_values(by='Date', ascending=False)
+        df['Date'] = df['Date'].dt.strftime('%Y/%m/%d')  # Format Date column as yyyy/mm/dd
         stocks = sorted(df['Stock'].unique())
         
         selected_stocks = st.sidebar.multiselect("Select Stock(s)", stocks)
@@ -79,7 +80,8 @@ if action == "View Fundamental Data":
 elif action == "Retrieve Fundamental Data":
     if st.sidebar.button("Retrieve Dataset"):
         if os.path.exists("fundamental.csv"):
-            df = pd.read_csv("fundamental.csv", parse_dates=['Date'])
+            df = pd.read_csv("fundamental.csv", parse_dates=['Date']).sort_values(by='Date', ascending=False)
+            df['Date'] = df['Date'].dt.strftime('%Y/%m/%d')  # Format Date column as yyyy/mm/dd
             st.session_state['data'] = df
             st.success("Data retrieved from fundamental.csv")
         else:
@@ -95,7 +97,8 @@ elif action == "Browse / Load xlsx file":
 elif action == "Consolidate Data":
     if 'new_data' in st.session_state:
         if os.path.exists("fundamental.csv"):
-            existing_df = pd.read_csv("fundamental.csv", parse_dates=['Date'])
+            existing_df = pd.read_csv("fundamental.csv", parse_dates=['Date']).sort_values(by='Date', ascending=False)
+            existing_df['Date'] = existing_df['Date'].dt.strftime('%Y/%m/%d')  # Format Date column as yyyy/mm/dd
             consolidated_df = consolidate_data(st.session_state['new_data'], existing_df)
             consolidated_df.to_csv("fundamental.csv", index=False)
             st.success("Data consolidated and saved to fundamental.csv")
@@ -104,8 +107,6 @@ elif action == "Consolidate Data":
             st.success("Data saved to fundamental.csv")
     else:
         st.warning("Please load new data first.")
-
-
 
 # Ensure data is preserved across interactions
 if 'data' in st.session_state:
