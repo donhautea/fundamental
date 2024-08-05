@@ -49,7 +49,33 @@ st.title("Stock News Data Viewer")
 st.sidebar.header("Options")
 action = st.sidebar.selectbox("Choose an action", ("Retrieve Fundamental Data", "Browse / Load xlsx file", "Consolidate Data", "View Fundamental Data"))
 
-if action == "Retrieve Fundamental Data":
+if action == "View Fundamental Data":
+    if os.path.exists("fundamental.csv"):
+        df = pd.read_csv("fundamental.csv", parse_dates=['Date'])
+        stocks = sorted(df['Stock'].unique())
+        
+        selected_stocks = st.sidebar.multiselect("Select Stock(s)", stocks)
+        
+        if 'start_date' not in st.session_state:
+            st.session_state.start_date = df['Date'].min().date()
+        if 'end_date' not in st.session_state:
+            st.session_state.end_date = df['Date'].max().date()
+        
+        start_date = st.sidebar.date_input("Start Date", min_value=df['Date'].min().date(), max_value=df['Date'].max().date(), value=st.session_state.start_date)
+        end_date = st.sidebar.date_input("End Date", min_value=df['Date'].min().date(), max_value=df['Date'].max().date(), value=st.session_state.end_date)
+        
+        # Update session state with date input values
+        st.session_state.start_date = start_date
+        st.session_state.end_date = end_date
+        
+        if st.sidebar.button("Process Filters"):
+            filtered_df = filter_data(df, selected_stocks, st.session_state.start_date, st.session_state.end_date)
+            st.header(f"Filtered Data for Selected Stocks")
+            st.dataframe(filtered_df)
+    else:
+        st.warning("No fundamental data available. Please retrieve or load data first.")
+
+elif action == "Retrieve Fundamental Data":
     if st.sidebar.button("Retrieve Dataset"):
         if os.path.exists("fundamental.csv"):
             df = pd.read_csv("fundamental.csv", parse_dates=['Date'])
@@ -78,31 +104,7 @@ elif action == "Consolidate Data":
     else:
         st.warning("Please load new data first.")
 
-elif action == "View Fundamental Data":
-    if os.path.exists("fundamental.csv"):
-        df = pd.read_csv("fundamental.csv", parse_dates=['Date'])
-        stocks = sorted(df['Stock'].unique())
-        
-        selected_stocks = st.sidebar.multiselect("Select Stock(s)", stocks)
-        
-        if 'start_date' not in st.session_state:
-            st.session_state.start_date = df['Date'].min().date()
-        if 'end_date' not in st.session_state:
-            st.session_state.end_date = df['Date'].max().date()
-        
-        start_date = st.sidebar.date_input("Start Date", min_value=df['Date'].min().date(), max_value=df['Date'].max().date(), value=st.session_state.start_date)
-        end_date = st.sidebar.date_input("End Date", min_value=df['Date'].min().date(), max_value=df['Date'].max().date(), value=st.session_state.end_date)
-        
-        # Update session state with date input values
-        st.session_state.start_date = start_date
-        st.session_state.end_date = end_date
-        
-        if st.sidebar.button("Process Filters"):
-            filtered_df = filter_data(df, selected_stocks, st.session_state.start_date, st.session_state.end_date)
-            st.header(f"Filtered Data for Selected Stocks")
-            st.dataframe(filtered_df)
-    else:
-        st.warning("No fundamental data available. Please retrieve or load data first.")
+
 
 # Ensure data is preserved across interactions
 if 'data' in st.session_state:
